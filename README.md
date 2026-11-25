@@ -24,33 +24,11 @@ Type `aidash` to open the dashboard.
 
 ### Browse and resume
 
-1. Search, or filter by tool with `⌘1`, `⌘2` and `⌘3`
-2. Select a session to preview its latest messages
+1. Search, or filter by tool
+2. Select a session to preview its latest messages. Each has a name label and time, your messages have a side bar, and a date line marks earlier days. Code, lists, headings and tables are formatted
 3. Press `enter` or double click to resume it in your terminal, in tmux if you use it
 
 Right click a session for more actions. If you open the dashboard in a separate window, it matches your Alfred theme's light or dark look.
-
-### Keyboard shortcuts
-
-| Keys | Action on the selected session |
-| --- | --- |
-| `enter` or `⌘↩` | Resume, or restore in the Archived view |
-| `⌘O` | Open the project folder in Finder |
-| `⇧⌘R` | Reveal the session log in Finder |
-| `⇧⌘C` | Copy the resume command |
-| `⌘⌫` | Archive, or delete permanently in the Archived view |
-| `⇧⌘⌫` | Delete permanently |
-
-Archiving and deleting ask first: `enter` confirms and `esc` cancels. Tick **Don't ask again**, or clear **Ask first** in the configuration, to act at once; permanent deletion cannot be undone. `⌘1` to `⌘3` filter by tool, `⌘4` shows archived sessions and `⌘R` refreshes.
-
-### Archive and restore
-
-1. Press **Archive** on a session and confirm, if asked
-2. Open **Archived** (`⌘4`) to **Restore** or delete it
-
-Claude Code sessions are archived to `ai-dashboard-archive` inside the Claude folder. Codex sessions use `codex archive`. **Delete Permanently** cannot be undone. Open sessions cannot be archived or deleted.
-
-![Screenshot of the archived view with sample data](screenshots/ai-dashboard-archived.png)
 
 ### Sample data
 
@@ -73,6 +51,8 @@ Open **Configure Workflow** to choose the tools shown, their data folders, the t
 ## Privacy
 
 Everything is read from local folders (`~/.claude` and `~/.codex` unless changed) and nothing is sent anywhere. From `~/.claude.json` only the cached usage figures are used. Titles and short message excerpts are cached in the workflow's cache folder. Turn previews off to keep message text out of it; generated titles are still cached.
+
+The preview shows message text only: it doesn't create links or load images from it.
 
 ## Limitations
 
