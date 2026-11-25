@@ -16,7 +16,6 @@ Note that the [Alfred Powerpack](https://www.alfredapp.com/powerpack/) is requir
 - Alfred 6
 - Python 3.9 or later
 - Claude Code and/or Codex, used at least once. Turn off the one you do not use.
-- Optional: `tmux`, and `zstd` to preview older Codex sessions that Codex compressed
 
 ## Usage
 
