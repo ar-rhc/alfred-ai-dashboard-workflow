@@ -14,7 +14,7 @@ Note that the [Alfred Powerpack](https://www.alfredapp.com/powerpack/) is requir
 ### Requirements
 
 - Alfred 6
-- `python3` for the dashboard, included with Apple's Command Line Tools (`xcode-select --install`). Without it the dashboard tells you how to install it
+- Python 3.9 or later
 - Claude Code and/or Codex, used at least once. Turn off the one you do not use.
 - Optional: `tmux`, and `zstd` to preview older Codex sessions that Codex compressed
 
