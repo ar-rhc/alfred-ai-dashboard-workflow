@@ -22,17 +22,11 @@ Note that the [Alfred Powerpack](https://www.alfredapp.com/powerpack/) is requir
 
 Type `aidash` to open the dashboard.
 
-### Browse and resume
+1. Search by keywords (title, folder, branch, model and more), or filter by tool
+2. Select a session to preview its latest messages
+3. Press `enter` or double click to resume it in your terminal or tmux
 
-1. Search, or filter by tool
-2. Select a session to preview its latest messages. Each has a name label and time, your messages have a side bar, and a date line marks earlier days. Code, lists, headings and tables are formatted
-3. Press `enter` or double click to resume it in your terminal, in tmux if you use it
-
-Right click a session for more actions. If you open the dashboard in a separate window, it matches your Alfred theme's light or dark look.
-
-### Sample data
-
-Type `aidash demo` or `aidash demo archived` to look around with invented sessions.
+Right click a session for more actions. Type `aidash demo` to try it with sample data.
 
 ## Claude Code limits
 
