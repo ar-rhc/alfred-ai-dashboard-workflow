@@ -1,4 +1,4 @@
-"""What the window shows: cards, session rows and the preview."""
+"""What the window shows: layout, cards, toolbar and session rows."""
 import hashlib
 import json
 import os
@@ -7,21 +7,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from . import collect, config, helpers, logparse, quota, sample
-
-
-def preview_markdown(session):
-    if not config.PREVIEW_MESSAGES:
-        return "*Message previews are turned off in the workflow configuration.*"
-    if not session["messages"]:
-        if session["path"].endswith(".zst") and not helpers.find_binary("zstd"):
-            return "*Codex compressed this older session. Install `zstd` to preview it.*"
-        return "*No readable messages in this session log.*"
-    blocks = []
-    for role, text, stamp in reversed(session["messages"][-config.PREVIEW_MESSAGES:]):
-        who = "You" if role == "user" else config.TOOL_NAMES[session["tool"]]
-        blocks.append("**%s** · %s\n\n%s" % (who, helpers.clock(stamp) if stamp else "", text))
-    return "\n\n---\n\n".join(blocks)
+from . import collect, config, helpers, listupdate, logparse, preview, quota, sample
 
 
 def row_for(session):
@@ -46,7 +32,7 @@ def row_for(session):
         "title": helpers.clean(title),
         "place": helpers.clean(place),
         "info": helpers.clean(info),
-        "preview": helpers.clean(preview_markdown(session)),
+        "preview": helpers.clean(preview.page(session)),
     }
 
 
@@ -92,15 +78,33 @@ def layout():
     return expand_templates(helpers.read_json(Path(__file__).resolve().parents[2] / "ui.json", {}))
 
 
+def walk(node):
+    """Every object in a piece of layout."""
+    if isinstance(node, dict):
+        yield node
+    for child in (node.values() if isinstance(node, dict) else node if isinstance(node, list) else ()):
+        yield from walk(child)
+
+
+def component(name):
+    return next(n for n in walk(layout()) if n.get("id") == name)
+
+
+def sized_list(updates):
+    """The list with the configured row height, already filled.
+
+    Alfred ignores a variable as a cell height and cannot update it, so the list is replaced.
+    """
+    rows = component("list")
+    rows["cell"]["height"] = config.ROW_HEIGHT
+    given = updates.pop("list")
+    rows["data"]["src"], rows["select"] = given["data"]["src"], given["select"]
+    return rows
+
+
 def single_card(tool, updates):
     """The remaining card at full width. A grid keeps its column count, so the row is replaced."""
-    def walk(node):
-        if isinstance(node, dict):
-            yield node
-        for child in (node.values() if isinstance(node, dict) else node if isinstance(node, list) else ()):
-            yield from walk(child)
-
-    card = next(n for n in walk(layout()) if n.get("id") == tool + "Card")
+    card = component(tool + "Card")
     for node in walk(card):
         node.update(updates.pop(node.get("id"), {}))
     return {"id": "cards", "type": "view", "layout": "grid", "cols": 1, "rows": 1, "components": [card]}
@@ -119,7 +123,7 @@ def collect_data(archived):
         claude = collect.collect_claude(parser) if "claude" in config.ENABLED else empty
         codex = collect.collect_codex(parser) if "codex" in config.ENABLED else empty
         if archived and "claude" in config.ENABLED:
-            old["claude"] = collect.collect_claude(parser, archived=True)["sessions"]
+            old["claude"] = collect.archived_claude(parser)
         if archived and "codex" in config.ENABLED:
             try:
                 old["codex"] = collect.codex_sessions(parser, collect.codex_threads(archived=True))
@@ -184,61 +188,17 @@ def toolbar_widgets(chosen, archived):
     updates.update({
         "view_archived": tint(archived),
         "btnPrimary": {"text": "Restore" if archived else "Resume"},
-        "btnRemove": {"text": "Delete…" if archived else "Archive"},
+        # Archived sessions cannot be copied or archived again; ⌘⌫ deletes them instead.
         "btnCopy": {"enabled": not archived},
+        "btnCopyKey": {"text": "" if archived else "⇧⌘C"},
+        "btnRemove": {"enabled": not archived},
+        "btnRemoveKey": {"text": "" if archived else "⌘⌫"},
+        "btnDelete": {"enabled": config.ALLOW_PURGE},
+        "btnDeleteKey": {"text": ("⌘⌫" if archived else "⇧⌘⌫") if config.ALLOW_PURGE else ""},
         "search": {"placeholder": "Search archived sessions…  (↩ restores)" if archived
                    else "Search titles, folders, branches, models…  (↩ resumes)"},
     })
     return updates
-
-
-DETAIL_FIELDS = {"title": "detailTitle", "place": "detailPlace", "info": "detailInfo", "preview": "detailPreview"}
-
-
-def digest(value):
-    return hashlib.sha1(json.dumps(value, sort_keys=True).encode()).hexdigest()[:16]
-
-
-def full_list(reply, rows):
-    """Replace the whole list, keeping the selected session if it is still there."""
-    selected = os.environ.get("selected", "")
-    current = next((r for r in rows if r["uid"] == selected), rows[0] if rows else None)
-    updates = reply["update"]["ids"]
-    updates["list"] = {"data": {"src": rows}, "select": current["uid"] if current else ""}
-    updates.update(detail_widgets(current))
-    reply["functions"] = {"ids": {"list": "filterdata"}}
-
-
-def changed_rows(reply, rows, digests, before):
-    """Redraw only the rows that differ, leaving selection, scrolling and an unchanged preview alone."""
-    changed = {r["uid"]: r for r in rows if digests[r["uid"]] != before[r["uid"]]}
-    if not changed:
-        return
-    updates = reply["update"]["ids"]
-    updates["list"] = {"data": {"modify": {"replace": {"srcmap": changed, "autoselect": False}}}}
-    reply["functions"] = {"ids": {"list": "filterdata"}}
-    selected = os.environ.get("selected", "")
-    if selected in changed:
-        for field, widget in DETAIL_FIELDS.items():
-            if digests[selected][field] != before[selected][field]:
-                updates[widget] = {"text": changed[selected][field]}
-
-
-def send_list(reply, rows, stamp, context, force):
-    """Send the whole list, or only changed rows when the window is known to show the same rows in order.
-
-    What was last sent is remembered with its stamp; a window showing any other stamp gets everything.
-    """
-    record = config.CACHE_DIR / "shown.json"
-    shown = helpers.read_json(record, {})
-    order = [r["uid"] for r in rows]
-    digests = {r["uid"]: dict({field: digest(r[field]) for field in DETAIL_FIELDS}, row=digest(r)) for r in rows}
-    if (not force and shown.get("stamp") == os.environ.get("stamp") and shown.get("context") == context
-            and shown.get("order") == order):
-        changed_rows(reply, rows, digests, shown["rows"])
-    else:
-        full_list(reply, rows)
-    helpers.write_private(record, json.dumps({"stamp": stamp, "context": context, "order": order, "rows": digests}))
 
 
 def first_run(reply):
@@ -249,17 +209,22 @@ def first_run(reply):
         reply["variables"]["view"] = os.environ.get("view") or "active"
     hidden = [t for t in config.TOOL_NAMES if t not in config.ENABLED]
     removed = [t + "Card" for t in hidden] if not config.ENABLED else []
-    removed += ["filter_" + t for t in hidden]
+    removed += ["col_filter_" + t for t in hidden]
     if len(config.ENABLED) < 2:
-        removed += ["filter_all"] + ["filter_" + t for t in config.ENABLED] + ["view_separator"]
+        removed += ["col_filter_" + t for t in ("all",) + config.ENABLED] + ["view_separator"]
     if removed:
         reply["remove"] = {"ids": removed}
+    replaced = {}
     if len(config.ENABLED) == 1:
-        reply["replace"] = {"ids": {"cards": single_card(config.ENABLED[0], reply["update"]["ids"])}}
+        replaced["cards"] = single_card(config.ENABLED[0], reply["update"]["ids"])
+    if config.ROW_HEIGHT != component("list")["cell"]["height"]:
+        replaced["list"] = sized_list(reply["update"]["ids"])
+    if replaced:
+        reply["replace"] = {"ids": replaced}
 
 
-def load(force=False, first=False):
-    """Everything the window shows, as Alfred UI actions."""
+def load(force=False, first=False, removed=""):
+    """Everything the window shows, as Alfred UI actions. removed is the row that just left the list."""
     opening = first and sample.is_demo()
     if opening and "archived" in sample.demo_words():
         os.environ["view"] = "archived"
@@ -271,26 +236,19 @@ def load(force=False, first=False):
 
     claude, codex, sessions, error = collect_data(archived)
     save_index(sessions, archived)
-    rows = [row_for(s) for s in sessions if chosen in ("all", s["tool"])]
+    listed = [s for s in sessions if chosen in ("all", s["tool"])]
     stamp = fingerprint(sessions, chosen, archived)
 
     updates = card_widgets(claude, codex)
     updates.update(toolbar_widgets(chosen, archived))
-    status = status_text(len(rows), archived, error or codex.get("error"))
+    status = status_text(len(listed), archived, error or codex.get("error"))
     updates["status"] = {"text": helpers.clean(status), "colour": "secondaryLabelColor"}
     reply = {"variables": {"stamp": stamp}, "update": {"ids": updates}}
     # Leave the list alone when nothing changed, so scrolling and reading are not interrupted.
     if force or stamp != os.environ.get("stamp"):
         context = [chosen, archived, config.LIMIT_STYLE, config.PREVIEW_MESSAGES, sample.is_demo()]
-        send_list(reply, rows, stamp, context, force)
+        # Rows and their previews are built only now: most refreshes send no list.
+        listupdate.send_list(reply, [row_for(s) for s in listed], stamp, context, force, removed)
     if first:
         first_run(reply)
     return reply
-
-
-def detail_widgets(row):
-    row = row or {"title": "No session selected", "place": "", "info": "", "preview": ""}
-    return {
-        "detailTitle": {"text": row["title"]}, "detailPlace": {"text": row["place"]},
-        "detailInfo": {"text": row["info"]}, "detailPreview": {"text": row["preview"]},
-    }

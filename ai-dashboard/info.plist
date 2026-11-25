@@ -264,7 +264,8 @@ Browse local **Claude Code** and **Codex** sessions, usage and limits. Type `aid
 - Select a session to preview its latest messages. Press Return or double-click to resume it in your terminal, in tmux if you use it.
 - A separate window matches your Alfred theme's light or dark look.
 - Right-click for more actions. ⌘1 / ⌘2 / ⌘3 filter, ⌘4 shows archived sessions, ⌘R refreshes.
-- **Archive** asks first. The archived view offers **Restore** and **Delete…**. Claude Code sessions are archived to `ai-dashboard-archive` inside the Claude folder; Codex uses `codex archive`.
+- On the selected session: ⌘↩ resumes (restores in the archived view), ⌘O opens the project folder, ⇧⌘R reveals the log, ⇧⌘C copies the resume command, ⌘⌫ archives (deletes in the archived view) and ⇧⌘⌫ deletes permanently. In a confirmation, Return confirms and Escape cancels.
+- **Archive** and **Delete** ask first. Tick **Don't ask again** in the dialog, or clear **Ask first** in the configuration, to remove at once. The archived view offers **Restore** and **Delete…**. Claude Code sessions are archived to `ai-dashboard-archive` inside the Claude folder; Codex uses `codex archive`.
 - **Delete Permanently** cannot be undone. Open sessions cannot be archived or deleted.
 
 ### Claude Code limits
@@ -281,7 +282,7 @@ Everything is read from local folders (`~/.claude` and `~/.codex` unless changed
 
 ### Configuration
 
-Choose the tools shown, their data folders, terminal and tmux behaviour, list and preview size, limit wording, refresh rate, resume options, and whether permanent deletion is allowed.
+Choose the tools shown, their data folders, terminal and tmux behaviour, list size and row spacing, preview size, limit wording, refresh rate, resume options, and whether permanent deletion is allowed.
 </string>
 	<key>uidata</key>
 	<dict>
@@ -584,6 +585,36 @@ Choose the tools shown, their data folders, terminal and tmux behaviour, list an
 			<key>config</key>
 			<dict>
 				<key>default</key>
+				<string>46</string>
+				<key>pairs</key>
+				<array>
+					<array>
+						<string>Compact</string>
+						<string>46</string>
+					</array>
+					<array>
+						<string>Comfortable</string>
+						<string>54</string>
+					</array>
+					<array>
+						<string>Tight</string>
+						<string>40</string>
+					</array>
+				</array>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>List rows</string>
+			<key>type</key>
+			<string>popupbutton</string>
+			<key>variable</key>
+			<string>row_height</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
 				<string>6</string>
 				<key>pairs</key>
 				<array>
@@ -731,7 +762,7 @@ Choose the tools shown, their data folders, terminal and tmux behaviour, list an
 				<string>Allow “Delete Permanently”</string>
 			</dict>
 			<key>description</key>
-			<string>Delete always asks first. Permanent deletion cannot be undone.</string>
+			<string>Permanent deletion cannot be undone.</string>
 			<key>label</key>
 			<string>Deleting</string>
 			<key>type</key>
@@ -739,11 +770,49 @@ Choose the tools shown, their data folders, terminal and tmux behaviour, list an
 			<key>variable</key>
 			<string>allow_purge</string>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<true/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>Before archiving</string>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>Ask first</string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>confirm_archive</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<true/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>Before permanent delete</string>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string></string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>confirm_purge</string>
+		</dict>
 	</array>
 	<key>variablesdontexport</key>
 	<array/>
 	<key>version</key>
-	<string>1.0.0</string>
+	<string>1.1.0</string>
 	<key>webaddress</key>
 	<string>https://github.com/ar-rhc/alfred-ai-dashboard-workflow</string>
 </dict>

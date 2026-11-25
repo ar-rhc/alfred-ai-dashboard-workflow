@@ -16,9 +16,12 @@
     "refresh_seconds": {"src": "variable", "default": "", "scriptenv": true},
     "limit_style": {"src": "variable", "default": "", "scriptenv": true},
     "allow_purge": {"src": "variable", "default": "", "scriptenv": true},
+    "confirm_archive": {"src": "variable", "default": "", "scriptenv": true},
+    "confirm_purge": {"src": "variable", "default": "", "scriptenv": true},
     "terminal_app": {"src": "variable", "default": "", "scriptenv": true},
     "claude_args": {"src": "variable", "default": "", "scriptenv": true},
     "codex_args": {"src": "variable", "default": "", "scriptenv": true},
+    "row_height": {"src": "variable", "default": "", "scriptenv": true},
     "view": {"default": "active", "scriptenv": true},
     "tmux_mode": {"src": "variable", "default": "", "scriptenv": true},
     "terminal_command": {"src": "variable", "default": "", "scriptenv": true},
@@ -65,36 +68,80 @@
         }
       ]
     },
-    "filterButton": {
-      "type": "button",
-      "text": "{param:text}",
-      "bordered": false,
-      "font": {"weight": "semibold"},
-      "shortcut": "{param:key}",
-      "tooltip": "{param:tip}",
-      "events": [
+    "filterColumn": {
+      "type": "view",
+      "layout": "inline",
+      "direction": "vertical",
+      "spacing": 1,
+      "components": [
         {
-          "triggers": "actioned",
-          "action": [
-            {"variables": {"filter": "{param:tool}"}},
-            {"type": "script", "src": "scripts/run", "args": ["filter", "{param:tool}"]}
+          "id": "{param:id}",
+          "type": "button",
+          "text": "{param:text}",
+          "bordered": false,
+          "font": {"weight": "semibold"},
+          "shortcut": "{param:key}",
+          "tooltip": "{param:tip}",
+          "events": [
+            {
+              "triggers": "actioned",
+              "action": [
+                {"variables": {"filter": "{param:tool}"}},
+                {"type": "script", "src": "scripts/run", "args": ["filter", "{param:tool}"]}
+              ]
+            }
           ]
+        },
+        {
+          "type": "label",
+          "text": "{param:key}",
+          "colour": "tertiaryLabelColor",
+          "font": {"size": "small", "monospaced": "digits"},
+          "textalign": "centre"
         }
       ]
     },
     "actionButton": {
-      "type": "button",
-      "text": "{param:text}",
-      "shortcut": "{param:key}",
-      "tooltip": "{param:tip}",
-      "events": [
+      "type": "view",
+      "layout": "inline",
+      "direction": "vertical",
+      "spacing": 2,
+      "components": [
         {
-          "triggers": "actioned",
-          "action": {
-            "type": "script",
-            "src": "scripts/run",
-            "args": ["action", "{param:action}", "{value:list.selected.key}"]
-          }
+          "type": "view",
+          "layout": "stack",
+          "cornerradius": 6,
+          "background": "{param:background}",
+          "components": [
+            {
+              "id": "{param:id}",
+              "type": "button",
+              "text": "{param:text}",
+              "bordered": false,
+              "contenttintcolour": "{param:colour}",
+              "tooltip": "{param:tip}",
+              "constraints": {"size": {"width": 54, "height": 24}},
+              "events": [
+                {
+                  "triggers": "actioned",
+                  "action": {
+                    "type": "script",
+                    "src": "scripts/run",
+                    "args": ["action", "{param:action}", "{value:list.selected.key}"],
+                    "async": true
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "{param:id}Key",
+          "type": "label",
+          "text": "{param:hint}",
+          "colour": "secondaryLabelColor",
+          "font": {"size": "small"},
+          "textalign": "centre"
         }
       ]
     }
@@ -115,7 +162,13 @@
       ],
       "shortcuts": [
         {"shortcut": "↑", "action": {"type": "function", "src": "list", "args": "selectprevious"}},
-        {"shortcut": "↓", "action": {"type": "function", "src": "list", "args": "selectnext"}}
+        {"shortcut": "↓", "action": {"type": "function", "src": "list", "args": "selectnext"}},
+        {"shortcut": "⌘↩", "action": {"type": "script", "src": "scripts/run", "args": ["action", "primary", "{value:list.selected.key}"]}},
+        {"shortcut": "⌘O", "action": {"type": "script", "src": "scripts/run", "args": ["action", "folder", "{value:list.selected.key}"]}},
+        {"shortcut": "⇧⌘C", "action": {"type": "script", "src": "scripts/run", "args": ["action", "copycmd", "{value:list.selected.key}"]}},
+        {"shortcut": "⇧⌘R", "action": {"type": "script", "src": "scripts/run", "args": ["action", "reveal", "{value:list.selected.key}"]}},
+        {"shortcut": "⌘⌫", "action": {"type": "script", "src": "scripts/run", "args": ["action", "remove", "{value:list.selected.key}"], "async": true}},
+        {"shortcut": "⇧⌘⌫", "action": {"type": "script", "src": "scripts/run", "args": ["action", "purge", "{value:list.selected.key}"], "async": true}}
       ],
       "components": [
         {
@@ -278,57 +331,65 @@
                   "components": [
                     {
                       "type": "template",
-                      "src": "filterButton",
-                      "id": "filter_all",
-                      "params": {"text": "All", "key": "⌘1", "tip": "All sessions ⌘1", "tool": "all"}
+                      "src": "filterColumn",
+                      "id": "col_filter_all",
+                      "params": {"id": "filter_all", "text": "All", "key": "⌘1", "tip": "All sessions ⌘1", "tool": "all"}
                     },
                     {
                       "type": "template",
-                      "src": "filterButton",
-                      "id": "filter_claude",
-                      "params": {"text": "Claude", "key": "⌘2", "tip": "Claude Code only ⌘2", "tool": "claude"}
+                      "src": "filterColumn",
+                      "id": "col_filter_claude",
+                      "params": {"id": "filter_claude", "text": "Claude", "key": "⌘2", "tip": "Claude Code only ⌘2", "tool": "claude"}
                     },
                     {
                       "type": "template",
-                      "src": "filterButton",
-                      "id": "filter_codex",
-                      "params": {"text": "Codex", "key": "⌘3", "tip": "Codex only ⌘3", "tool": "codex"}
+                      "src": "filterColumn",
+                      "id": "col_filter_codex",
+                      "params": {"id": "filter_codex", "text": "Codex", "key": "⌘3", "tip": "Codex only ⌘3", "tool": "codex"}
                     },
+                    {"id": "view_separator", "type": "label", "text": "|", "colour": "tertiaryLabelColor", "constraints": {"position": "centre"}},
                     {
-                      "id": "view_separator",
-                      "type": "label",
-                      "text": "|",
-                      "colour": "tertiaryLabelColor",
-                      "constraints": {"position": "centre"}
-                    },
-                    {
-                      "id": "view_archived",
-                      "type": "button",
-                      "text": "Archived",
-                      "bordered": false,
-                      "contenttintcolour": "secondaryLabelColor",
-                      "font": {"weight": "semibold"},
-                      "shortcut": "⌘4",
-                      "tooltip": "Show or hide archived sessions ⌘4",
-                      "events": [
+                      "type": "view",
+                      "layout": "inline",
+                      "direction": "vertical",
+                      "spacing": 1,
+                      "components": [
                         {
-                          "triggers": "actioned",
-                          "action": {"type": "script", "src": "scripts/run", "args": ["view", "toggle"]}
-                        }
+                          "id": "view_archived",
+                          "type": "button",
+                          "text": "Archived",
+                          "bordered": false,
+                          "contenttintcolour": "secondaryLabelColor",
+                          "font": {"weight": "semibold"},
+                          "shortcut": "⌘4",
+                          "tooltip": "Show or hide archived sessions ⌘4",
+                          "constraints": {"position": "centre"},
+                          "events": [
+                            {"triggers": "actioned", "action": {"type": "script", "src": "scripts/run", "args": ["view", "toggle"]}}
+                          ]
+                        },
+                        {"type": "label", "text": "⌘4", "colour": "tertiaryLabelColor", "font": {"size": "small", "monospaced": "digits"}, "textalign": "centre"}
                       ]
                     },
                     {
-                      "type": "button",
-                      "bordered": false,
-                      "image": {"type": "symbol", "src": "arrow.clockwise"},
-                      "text": "",
-                      "shortcut": "⌘R",
-                      "tooltip": "Refresh ⌘R",
-                      "events": [
+                      "type": "view",
+                      "layout": "inline",
+                      "direction": "vertical",
+                      "spacing": 1,
+                      "components": [
                         {
-                          "triggers": "actioned",
-                          "action": {"type": "script", "src": "scripts/run", "args": ["load", "force"], "async": true}
-                        }
+                          "type": "button",
+                          "bordered": false,
+                          "image": {"type": "symbol", "src": "arrow.clockwise"},
+                          "text": "",
+                          "shortcut": "⌘R",
+                          "tooltip": "Refresh ⌘R",
+                          "constraints": {"position": "centre"},
+                          "events": [
+                            {"triggers": "actioned", "action": {"type": "script", "src": "scripts/run", "args": ["load", "force"], "async": true}}
+                          ]
+                        },
+                        {"type": "label", "text": "⌘R", "colour": "tertiaryLabelColor", "font": {"size": "small", "monospaced": "digits"}, "textalign": "centre"}
                       ]
                     }
                   ]
@@ -341,7 +402,7 @@
           "constraints": {"region": "left", "size": {"width": 272}, "insets": {"left": 20}},
           "id": "list",
           "type": "dataview",
-          "spacing": 4,
+          "spacing": 2,
           "placeholder": "No sessions",
           "autoadjustcontentinsets": false,
           "behaviour": {"selection": {"allowempty": false}},
@@ -371,7 +432,7 @@
             }
           ],
           "cell": {
-            "height": 54,
+            "height": 46,
             "init": {
               "row.background": null,
               "rowTitle.colour": "labelColor",
@@ -391,29 +452,35 @@
                 {
                   "id": "row",
                   "type": "view",
-                  "layout": "inline",
-                  "direction": "vertical",
-                  "padding": 8,
-                  "spacing": 3,
+                  "layout": "stack",
                   "cornerradius": 6,
                   "components": [
-                    {"id": "rowTitle", "type": "label"},
                     {
                       "type": "view",
-                      "layout": "border",
-                      "spacing": 6,
+                      "layout": "inline",
+                      "direction": "vertical",
+                      "spacing": 2,
+                      "constraints": {"position": "centre", "stretch": "horizontal", "insets": {"left": 8, "right": 8}},
                       "components": [
+                        {"id": "rowTitle", "type": "label"},
                         {
-                          "constraints": {"region": "left", "size": {"width": 78}},
-                          "id": "rowTool",
-                          "type": "label",
-                          "font": {"size": "small", "weight": "semibold"}
-                        },
-                        {
-                          "constraints": {"region": "centre"},
-                          "id": "rowMeta",
-                          "type": "label",
-                          "font": {"size": "small"}
+                          "type": "view",
+                          "layout": "border",
+                          "spacing": 6,
+                          "components": [
+                            {
+                              "constraints": {"region": "left", "size": {"width": 78}},
+                              "id": "rowTool",
+                              "type": "label",
+                              "font": {"size": "small", "weight": "semibold"}
+                            },
+                            {
+                              "constraints": {"region": "centre"},
+                              "id": "rowMeta",
+                              "type": "label",
+                              "font": {"size": "small"}
+                            }
+                          ]
                         }
                       ]
                     }
@@ -427,16 +494,16 @@
                   ],
                   "menu": [
                     {
-                      "text": "Resume",
+                      "text": "Resume  ⌘↩",
                       "action": {"type": "script", "src": "scripts/run", "args": ["action", "resume", "{data:key}"]}
                     },
                     {
-                      "text": "Open Project Folder",
+                      "text": "Open Project Folder  ⌘O",
                       "action": {"type": "script", "src": "scripts/run", "args": ["action", "folder", "{data:key}"]}
                     },
                     {"type": "separator"},
                     {
-                      "text": "Copy Resume Command",
+                      "text": "Copy Resume Command  ⇧⌘C",
                       "action": {"type": "script", "src": "scripts/run", "args": ["action", "copycmd", "{data:key}"]}
                     },
                     {
@@ -444,21 +511,21 @@
                       "action": {"type": "script", "src": "scripts/run", "args": ["action", "copyid", "{data:key}"]}
                     },
                     {
-                      "text": "Reveal Session Log",
+                      "text": "Reveal Session Log  ⇧⌘R",
                       "action": {"type": "script", "src": "scripts/run", "args": ["action", "reveal", "{data:key}"]}
                     },
                     {"type": "separator"},
                     {
-                      "text": "Archive…",
-                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "delete", "{data:key}"]}
+                      "text": "Archive…  ⌘⌫",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "delete", "{data:key}"], "async": true}
                     },
                     {
-                      "text": "Restore from Archive",
+                      "text": "Restore from Archive  ⌘↩",
                       "action": {"type": "script", "src": "scripts/run", "args": ["action", "restore", "{data:key}"]}
                     },
                     {
-                      "text": "Delete Permanently…",
-                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "purge", "{data:key}"]}
+                      "text": "Delete Permanently…  ⇧⌘⌫",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "purge", "{data:key}"], "async": true}
                     }
                   ]
                 }
@@ -520,74 +587,64 @@
                     },
                     {
                       "type": "view",
-                      "layout": "border",
+                      "layout": "grid",
+                      "cols": 6,
+                      "rows": 1,
+                      "spacing": 5,
                       "components": [
                         {
-                          "type": "view",
-                          "layout": "inline",
-                          "direction": "horizontal",
-                          "spacing": 6,
-                          "components": [
-                            {
-                              "type": "template",
-                              "src": "actionButton",
-                              "id": "btnPrimary",
-                              "params": {
-                                "text": "Resume",
-                                "key": "⌘↩",
-                                "tip": "Resume in your terminal, or restore ⌘↩",
-                                "action": "primary"
-                              }
-                            },
-                            {
-                              "type": "template",
-                              "src": "actionButton",
-                              "params": {
-                                "text": "Folder",
-                                "key": "⌘O",
-                                "tip": "Open project folder ⌘O",
-                                "action": "folder"
-                              }
-                            },
-                            {
-                              "type": "template",
-                              "src": "actionButton",
-                              "id": "btnCopy",
-                              "params": {
-                                "text": "Copy",
-                                "key": "⇧⌘C",
-                                "tip": "Copy resume command ⇧⌘C",
-                                "action": "copycmd"
-                              }
-                            },
-                            {
-                              "type": "template",
-                              "src": "actionButton",
-                              "params": {
-                                "text": "Log",
-                                "key": "⇧⌘R",
-                                "tip": "Reveal session log ⇧⌘R",
-                                "action": "reveal"
-                              }
-                            },
-                            {
-                              "type": "button",
-                              "text": "Archive",
-                              "tooltip": "Archive, or delete when already archived. Asks first.",
-                              "events": [
-                                {
-                                  "triggers": "actioned",
-                                  "action": {
-                                    "type": "script",
-                                    "src": "scripts/run",
-                                    "args": ["action", "remove", "{value:list.selected.key}"]
-                                  }
-                                }
-                              ],
-                              "id": "btnRemove"
-                            }
-                          ],
-                          "constraints": {"region": "left"}
+                          "type": "template",
+                          "src": "actionButton",
+                          "params": {
+                            "id": "btnPrimary", "text": "Resume", "hint": "⌘↩", "action": "primary",
+                            "tip": "Resume in your terminal, or restore ⌘↩",
+                            "colour": "#ffffff", "background": "controlAccentColor"
+                          }
+                        },
+                        {
+                          "type": "template",
+                          "src": "actionButton",
+                          "params": {
+                            "id": "btnFolder", "text": "Folder", "hint": "⌘O", "action": "folder",
+                            "tip": "Open project folder ⌘O",
+                            "colour": "labelColor", "background": "#80808055"
+                          }
+                        },
+                        {
+                          "type": "template",
+                          "src": "actionButton",
+                          "params": {
+                            "id": "btnCopy", "text": "Copy", "hint": "⇧⌘C", "action": "copycmd",
+                            "tip": "Copy resume command ⇧⌘C",
+                            "colour": "labelColor", "background": "#80808055"
+                          }
+                        },
+                        {
+                          "type": "template",
+                          "src": "actionButton",
+                          "params": {
+                            "id": "btnLog", "text": "Log", "hint": "⇧⌘R", "action": "reveal",
+                            "tip": "Reveal session log ⇧⌘R",
+                            "colour": "labelColor", "background": "#80808055"
+                          }
+                        },
+                        {
+                          "type": "template",
+                          "src": "actionButton",
+                          "params": {
+                            "id": "btnRemove", "text": "Archive", "hint": "⌘⌫", "action": "remove",
+                            "tip": "Archive ⌘⌫",
+                            "colour": "labelColor", "background": "#80808055"
+                          }
+                        },
+                        {
+                          "type": "template",
+                          "src": "actionButton",
+                          "params": {
+                            "id": "btnDelete", "text": "Delete", "hint": "⇧⌘⌫", "action": "purge",
+                            "tip": "Delete permanently",
+                            "colour": "systemRedColor", "background": "#80808055"
+                          }
                         }
                       ]
                     }
@@ -596,10 +653,8 @@
                 {
                   "constraints": {"region": "centre"},
                   "id": "detailPreview",
-                  "type": "markdownarea",
-                  "text": "",
-                  "autoadjustcontentinsets": false,
-                  "behaviour": {"mode": "replace", "scroll": "start"}
+                  "type": "webkitview",
+                  "text": ""
                 }
               ]
             }

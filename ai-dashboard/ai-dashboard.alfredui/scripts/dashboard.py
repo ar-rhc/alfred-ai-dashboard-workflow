@@ -5,8 +5,8 @@ Prints Alfred UI JSON actions. Reads local session logs, plus the cached usage
 figures in Claude Code's .claude.json; makes no network requests and never opens
 credential files. Must stay Python 3.9 compatible.
 
-Modes: appearance <argument> | init | load [force] | filter <all|claude|codex> | view toggle | action <name> <uid>
-Sessions are removed only through the confirmed actions.
+Modes: appearance <argument> | init | load [force] | filter <all|claude|codex> | view toggle | action <name> <uid> [dont-ask-again]
+Sessions are removed after a confirmation, unless the user turned it off.
 """
 import json
 import os
@@ -50,7 +50,7 @@ def main(argv):
             reply = screen.load(force=True)
             reply["variables"]["view"] = os.environ["view"]
         elif mode == "action":
-            reply = rowactions.action(argv[2], argv[3] if len(argv) > 3 else "")
+            reply = rowactions.action(*argv[2:5])
         else:
             reply = replies.message("Unknown mode", True)
     except Exception as exc:  # surface failures in the window instead of a blank dashboard

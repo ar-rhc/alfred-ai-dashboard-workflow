@@ -40,13 +40,11 @@ def parse_time(value):
         return 0.0
 
 
-def day_of(stamp):
-    return datetime.fromtimestamp(stamp).strftime("%Y-%m-%d")
-
-
-def recent_days():
+def day_starts():
+    """Local midnight starting each day counted for usage, oldest first, and then tomorrow's."""
     today = datetime.now().date()
-    return [(today - timedelta(days=n)).isoformat() for n in range(config.STATS_DAYS - 1, -1, -1)]
+    return [datetime.combine(today - timedelta(days=n), datetime.min.time()).timestamp()
+            for n in range(config.STATS_DAYS - 1, -2, -1)]
 
 
 def tokens(n):
@@ -74,6 +72,14 @@ def clock(stamp):
     if when.date() == datetime.now().date():
         return when.strftime("%H:%M")
     return when.strftime("%a %-d %b %H:%M")
+
+
+def earlier_day(stamp):
+    """The date of a time before today, such as "Wed 25 Nov" (with the year if not this one), else ""."""
+    when, today = datetime.fromtimestamp(stamp).date(), datetime.now().date()
+    if when >= today:
+        return ""
+    return when.strftime("%a %-d %b" if when.year == today.year else "%a %-d %b %Y")
 
 
 def reset_time(stamp):

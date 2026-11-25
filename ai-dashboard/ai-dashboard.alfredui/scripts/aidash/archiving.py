@@ -1,5 +1,6 @@
 """Archiving, restoring and permanently deleting sessions."""
 import glob
+import json
 import os
 import shutil
 import subprocess
@@ -7,7 +8,7 @@ import sys
 import time
 from pathlib import Path
 
-from . import config, helpers, replies, screen
+from . import config, helpers, listupdate, replies, screen
 
 
 def running(pid):
@@ -122,23 +123,53 @@ def confirm_sheet(session, uid, permanent):
         heading, button, mode = "Archive session?", "Archive", "delete-confirmed"
         detail = "It leaves the list. Restore it any time from the Archived view."
     close = replies.close_popup("confirmDelete")
-    # The session is fixed here, so a list refresh cannot change what gets removed.
-    proceed = [close, {"type": "script", "src": "scripts/run", "args": ["action", mode, uid]}]
+    # The tick is read while the dialog still exists. The session is fixed here, so a list refresh cannot change it.
+    working = {"update": {"ids": {"status": {"text": "Deleting…" if permanent else "Archiving…"}}}}
+    proceed = [dict(close, variables={"dont_ask": "{value:dontAsk.checked}"}), {"type": "json", "src": working},
+               {"type": "script", "src": "scripts/run", "args": ["action", mode, uid, "{var:dont_ask}"], "async": True}]
     return replies.popup("confirmDelete", [
         replies.label(heading, font={"size": "large", "weight": "semibold"}, constraints={"size": {"width": 420}}),
         replies.label("%s: %s" % (config.TOOL_NAMES[session["tool"]], helpers.one_line(session.get("title"), 55)),
                       linebreak="truncatetail"),
         replies.label(helpers.short_folder(session["cwd"]), colour="secondaryLabelColor", linebreak="truncatemiddle"),
         replies.label(detail, colour="systemRedColor" if permanent else "secondaryLabelColor"),
+        {"type": "checkbox", "id": "dontAsk",
+         "text": "Don’t ask again before %s" % ("permanent delete" if permanent else "archiving")},
         {"type": "view", "layout": "border", "components": [
-            replies.button("Cancel", close, shortcut="↩", constraints={"region": "left"}),
-            replies.button(button, proceed, constraints={"region": "right"}),
+            replies.button("Cancel", close, shortcut="⎋", tooltip="Cancel esc", constraints={"region": "left"}),
+            replies.button(button, proceed, shortcut="↩", tooltip=button + " ↩", constraints={"region": "right"}),
         ]},
     ])
 
 
-def change_action(name, uid, session, cache):
-    """Archive and permanent deletion ask first; restoring does not remove anything, so it just runs."""
+def stop_asking(change):
+    """Turn the matching "ask first" setting off in the Workflow Configuration. False if that failed."""
+    script = ('on run argv\ntell application id "com.runningwithcrayons.Alfred" to set configuration (item 1 of argv) '
+              'to value "0" in workflow (item 2 of argv)\nend run')
+    setting = "confirm_purge" if change == "purge" else "confirm_archive"
+    try:
+        subprocess.run(["/usr/bin/osascript", "-e", script, setting, config.BUNDLE_ID], check=True,
+                       capture_output=True, timeout=10)
+    except (OSError, subprocess.SubprocessError) as exc:
+        print("Could not save %s: %s" % (setting, exc), file=sys.stderr)
+        return False
+    return True
+
+
+def repeated():
+    """Whether a removal was just requested, as when keys are held down. Every request restarts the wait."""
+    record = config.CACHE_DIR / "removal.json"
+    last = helpers.read_json(record, {}).get("time", 0)
+    now = time.time()
+    helpers.write_private(record, json.dumps({"time": now}))
+    return 0 <= now - last < config.REPEAT_SECONDS
+
+
+def change_action(name, uid, session, cache, answer=""):
+    """Archive and permanent deletion ask first unless turned off. Restoring removes nothing, so it just runs.
+
+    answer is the dialog's "Don't ask again" tick.
+    """
     change = "restore" if name == "restore" else "purge" if name.startswith("purge") else "archive"
     if change == "purge" and not config.ALLOW_PURGE:
         return replies.message("Permanent deletion is turned off in the workflow configuration", True)
@@ -151,17 +182,20 @@ def change_action(name, uid, session, cache):
         reason = open_reason(session)
         if reason:
             return replies.message(reason, True)
-    if change != "restore" and not name.endswith("-confirmed"):
-        return confirm_sheet(session, uid, change == "purge")
+    confirmed = name.endswith("-confirmed")
+    if change != "restore" and not confirmed:
+        if config.asks(change):
+            return confirm_sheet(session, uid, change == "purge")
+        if repeated():
+            return replies.message("Ignored a repeated key press. Wait a second and try again.")
     if demo:
         return replies.message("Demo data: nothing was changed")
     done = change_session(session, change)
-    # Keep the place in the list: select whatever followed the session that left it.
-    order = list(cache["sessions"])
-    place = order.index(uid)
-    following = (order[place + 1:] + order[:place][::-1] + [""])[0]
+    if confirmed and answer.strip().lower() in ("1", "true", "yes"):  # saved only once the change worked
+        done += " · won’t ask again" if stop_asking(change) else " · could not save “Don’t ask again”"
+    following = listupdate.next_selection(list(cache["sessions"]), uid)  # keep the place in the list
     os.environ["selected"] = following
-    reply = screen.load(force=True)
+    reply = screen.load(force=True, removed=uid)
     reply["variables"]["selected"] = following
     reply["update"]["ids"]["status"] = {"text": done, "colour": "secondaryLabelColor"}
     return reply

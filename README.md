@@ -28,11 +28,24 @@ Type `aidash` to open the dashboard.
 2. Select a session to preview its latest messages
 3. Press `enter` or double click to resume it in your terminal, in tmux if you use it
 
-Right click a session for more actions. `⌘R` refreshes. If you open the dashboard in a separate window, it matches your Alfred theme's light or dark look.
+Right click a session for more actions. If you open the dashboard in a separate window, it matches your Alfred theme's light or dark look.
+
+### Keyboard shortcuts
+
+| Keys | Action on the selected session |
+| --- | --- |
+| `enter` or `⌘↩` | Resume, or restore in the Archived view |
+| `⌘O` | Open the project folder in Finder |
+| `⇧⌘R` | Reveal the session log in Finder |
+| `⇧⌘C` | Copy the resume command |
+| `⌘⌫` | Archive, or delete permanently in the Archived view |
+| `⇧⌘⌫` | Delete permanently |
+
+Archiving and deleting ask first: `enter` confirms and `esc` cancels. Tick **Don't ask again**, or clear **Ask first** in the configuration, to act at once; permanent deletion cannot be undone. `⌘1` to `⌘3` filter by tool, `⌘4` shows archived sessions and `⌘R` refreshes.
 
 ### Archive and restore
 
-1. Press **Archive** on a session and confirm
+1. Press **Archive** on a session and confirm, if asked
 2. Open **Archived** (`⌘4`) to **Restore** or delete it
 
 Claude Code sessions are archived to `ai-dashboard-archive` inside the Claude folder. Codex sessions use `codex archive`. **Delete Permanently** cannot be undone. Open sessions cannot be archived or deleted.
@@ -55,7 +68,7 @@ Until then, the dashboard shows the figures Claude Code last cached in `~/.claud
 
 ## Configuration
 
-Open **Configure Workflow** to choose the tools shown, their data folders, the terminal (system default, Apple Terminal, iTerm, Ghostty or a custom command), tmux behaviour, list and preview size, limits shown as left or used, refresh rate, resume options and whether permanent deletion is allowed.
+Open **Configure Workflow** to choose the tools shown, their data folders, the terminal (system default, Apple Terminal, iTerm, Ghostty or a custom command), tmux behaviour, list size and row spacing, preview size, limits shown as left or used, refresh rate, resume options and whether permanent deletion is allowed.
 
 ## Privacy
 

@@ -1,4 +1,5 @@
 """Sessions and usage for each tool."""
+import bisect
 import glob
 import json
 import os
@@ -11,29 +12,59 @@ from . import config, helpers, logparse, quota
 
 
 def summarise(usage):
-    days = dict.fromkeys(helpers.recent_days(), 0)
+    """Fresh tokens on each recent day."""
+    starts = helpers.day_starts()
+    days = [0] * (len(starts) - 1)
     for stamp, fresh, _cached in usage.values():
-        day = helpers.day_of(stamp)
-        if day in days:
-            days[day] += fresh
-    return list(days.values())
+        if starts[0] <= stamp < starts[-1]:
+            days[bisect.bisect_right(starts, stamp) - 1] += fresh
+    return days
 
 
-def collect_claude(parser, archived=False):
-    root = config.CLAUDE_HOME / (config.ARCHIVE_DIR if archived else "projects")
+def week_cutoff():
+    """Logs unchanged since this cannot hold usage from the days counted."""
+    return time.time() - (config.STATS_DAYS + 1) * 86400
+
+
+def claude_logs(root):
+    """The session logs under root, newest first, and the subagent logs by (project, session)."""
     pattern = glob.escape(str(root))
     top = sorted(glob.glob(pattern + "/*/*.jsonl"), key=helpers.mtime, reverse=True)
-    subagents = glob.glob(pattern + "/*/*/subagents/**/*.jsonl", recursive=True)
-    cutoff = time.time() - (config.STATS_DAYS + 1) * 86400
-    by_session = {}
-    for path in subagents:
+    subagents = {}
+    for path in glob.glob(pattern + "/*/*/subagents/**/*.jsonl", recursive=True):
         parts = Path(path).relative_to(root).parts
-        by_session.setdefault((parts[0], parts[1]), []).append(path)
+        subagents.setdefault((parts[0], parts[1]), []).append(path)
+    return top, subagents
 
+
+def recent_usage(parser, paths, is_subagent):
+    """Usage by message id from the logs changed recently enough to count."""
+    cutoff, usage = week_cutoff(), {}
+    for path in paths:
+        if helpers.mtime(path) >= cutoff:
+            state = parser.parse(path, "claude", "", is_subagent)
+            if state:
+                usage.update(state["usage"])
+    return usage
+
+
+def claude_session(path, state, modified, usage):
+    return {
+        "tool": "claude", "id": Path(path).stem, "path": path, "cwd": state["cwd"],
+        "title": state["custom_title"] or state["title"] or state["first_prompt"] or "Untitled session",
+        "branch": state["branch"], "model": state["model"], "updated": modified,
+        "tokens": sum(u[1] for u in usage.values()), "messages": state["messages"],
+    }
+
+
+def scan_claude(parser, root):
+    """The newest sessions under root, the usage found by message id and how many were used this week."""
+    top, subagents = claude_logs(root)
+    cutoff = week_cutoff()
     usage, sessions, week = {}, [], 0
     for path in top:
         project, session = Path(path).parent.name, Path(path).stem
-        children = by_session.pop((project, session), [])
+        children = subagents.pop((project, session), [])
         modified = max([helpers.mtime(path)] + [helpers.mtime(c) for c in children])
         if len(sessions) >= config.LIST_LIMIT and modified < cutoff:
             continue
@@ -51,28 +82,26 @@ def collect_claude(parser, archived=False):
         if modified >= cutoff:
             week += 1
         if len(sessions) < config.LIST_LIMIT and config.SESSION_ID.match(session):
-            sessions.append({
-                "tool": "claude", "id": session, "path": path, "cwd": state["cwd"],
-                "title": state["custom_title"] or state["title"] or state["first_prompt"] or "Untitled session",
-                "branch": state["branch"], "model": state["model"], "updated": modified,
-                "tokens": sum(u[1] for u in own.values()), "messages": state["messages"],
-            })
-    for children in by_session.values():  # subagents whose parent log is gone
-        for child in children:
-            if helpers.mtime(child) >= cutoff:
-                state = parser.parse(child, "claude", "", True)
-                if state:
-                    usage.update(state["usage"])
-    if not archived:
-        # Archiving a session does not undo the usage it already consumed.
-        stored = glob.escape(str(config.CLAUDE_HOME / config.ARCHIVE_DIR))
-        for path in glob.glob(stored + "/*/*.jsonl") + glob.glob(stored + "/*/*/subagents/**/*.jsonl", recursive=True):
-            if helpers.mtime(path) >= cutoff:
-                state = parser.parse(path, "claude", "", "subagents" in Path(path).parts)
-                if state:
-                    usage.update(state["usage"])
+            sessions.append(claude_session(path, state, modified, own))
+    orphans = [path for paths in subagents.values() for path in paths]  # their session log is gone
+    usage.update(recent_usage(parser, orphans, True))
+    return sessions, usage, week
+
+
+def collect_claude(parser):
+    root = config.CLAUDE_HOME / "projects"
+    sessions, usage, week = scan_claude(parser, root)
+    # Archiving a session does not undo the usage it already consumed.
+    top, subagents = claude_logs(config.CLAUDE_HOME / config.ARCHIVE_DIR)
+    usage.update(recent_usage(parser, top, False))
+    usage.update(recent_usage(parser, [path for paths in subagents.values() for path in paths], True))
     return {"sessions": sessions, "days": summarise(usage), "week": week,
-            "limits": quota.claude_limits(), "found": root.is_dir() or (config.CLAUDE_HOME / "projects").is_dir()}
+            "limits": quota.claude_limits(), "found": root.is_dir()}
+
+
+def archived_claude(parser):
+    """The sessions in the archive, for the Archived view."""
+    return scan_claude(parser, config.CLAUDE_HOME / config.ARCHIVE_DIR)[0]
 
 
 def codex_threads(archived=False):
@@ -81,14 +110,10 @@ def codex_threads(archived=False):
     if not databases:
         return []
     newest = max(databases, key=lambda p: int(re.sub(r"\D", "", Path(p).stem) or 0))
-    try:
-        return query_threads(Path(newest).as_uri() + "?mode=ro", archived)
-    except sqlite3.OperationalError:
-        # Once Codex closes the database its write-ahead log is gone, and a read-only connection
-        # cannot create one. The file is then complete, so it is safe to read as it stands.
-        if os.path.exists(newest + "-wal"):
-            raise
-        return query_threads(Path(newest).as_uri() + "?mode=ro&immutable=1", archived)
+    # Once Codex closes the database its write-ahead log is gone and the file is complete, so it is
+    # read as it stands. A plain read-only connection would fail, or with newer SQLite add files.
+    mode = "?mode=ro" if os.path.exists(newest + "-wal") else "?mode=ro&immutable=1"
+    return query_threads(Path(newest).as_uri() + mode, archived)
 
 
 def query_threads(uri, archived):
@@ -167,7 +192,7 @@ def codex_sessions(parser, threads):
 
 
 def collect_codex(parser):
-    cutoff = time.time() - (config.STATS_DAYS + 1) * 86400
+    cutoff = week_cutoff()
     rollouts = []
     for folder in ("sessions", "archived_sessions"):
         for pattern in ("/**/*.jsonl", "/**/*.jsonl.zst"):

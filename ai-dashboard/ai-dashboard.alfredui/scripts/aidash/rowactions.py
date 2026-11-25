@@ -26,7 +26,7 @@ def folder_command(folder):
     return ["/usr/bin/open"] + (["-R"] if bundle else []) + [str(real)]
 
 
-def action(name, uid):
+def action(name, uid, answer=""):
     cache = helpers.read_json(config.CACHE_DIR / "index.json", {})
     if name == "limits-setup":
         return {} if cache.get("demo") else quota.limits_help()
@@ -39,7 +39,7 @@ def action(name, uid):
     if name == "remove":
         name = "purge" if session.get("archived") else "delete"
     if name in ("restore", "delete", "purge", "delete-confirmed", "purge-confirmed"):
-        return archiving.change_action(name, uid, session, cache)
+        return archiving.change_action(name, uid, session, cache, answer)
     if session.get("archived") and name in ("resume", "copycmd"):
         return replies.message("Restore this session first")
     if name in ("resume", "copycmd", "folder") and session["cwd"] and not usable_path(session["cwd"]):
