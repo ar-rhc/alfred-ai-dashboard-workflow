@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.alfredworkflow
+prefs.plist
+
+# local notes, backups and generated files
+HANDOFF.md
+backups/
+artifacts/
+icon-options/
+icon-design/
+preview/dashboard-preview.json

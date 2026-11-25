@@ -1,0 +1,619 @@
+{
+  "bundleid": "com.github.ar-rhc.ai-dashboard",
+  "iconpath": "../icon.png",
+  "log": {"level": "warning", "internal": true},
+  "variablesconfig": {
+    "input": {"src": "args[0]", "default": "", "scriptenv": true},
+    "filter": {"default": "all", "persist": true, "scriptenv": true},
+    "selected": {"default": "", "scriptenv": true},
+    "stamp": {"default": "", "scriptenv": true},
+    "show_claude": {"src": "variable", "default": "", "scriptenv": true},
+    "show_codex": {"src": "variable", "default": "", "scriptenv": true},
+    "claude_folder": {"src": "variable", "default": "", "scriptenv": true},
+    "codex_folder": {"src": "variable", "default": "", "scriptenv": true},
+    "list_limit": {"src": "variable", "default": "", "scriptenv": true},
+    "preview_count": {"src": "variable", "default": "", "scriptenv": true},
+    "refresh_seconds": {"src": "variable", "default": "", "scriptenv": true},
+    "limit_style": {"src": "variable", "default": "", "scriptenv": true},
+    "allow_purge": {"src": "variable", "default": "", "scriptenv": true},
+    "terminal_app": {"src": "variable", "default": "", "scriptenv": true},
+    "claude_args": {"src": "variable", "default": "", "scriptenv": true},
+    "codex_args": {"src": "variable", "default": "", "scriptenv": true},
+    "view": {"default": "active", "scriptenv": true},
+    "tmux_mode": {"src": "variable", "default": "", "scriptenv": true},
+    "terminal_command": {"src": "variable", "default": "", "scriptenv": true},
+    "window_appearance": {"src": "variable", "default": "automatic"}
+  },
+  "pulse": {"src": "scripts/run", "args": ["load"], "interval": 30, "intervalmode": "delay"},
+  "templates": {
+    "cardHeader": {
+      "type": "button",
+      "text": "{param:text}",
+      "bordered": false,
+      "contenttintcolour": "{param:colour}",
+      "font": {"size": "medium", "weight": "semibold"},
+      "events": [
+        {
+          "triggers": "actioned",
+          "action": [
+            {"variables": {"filter": "{param:tool}"}},
+            {"type": "script", "src": "scripts/run", "args": ["filter", "{param:tool}"]}
+          ]
+        }
+      ]
+    },
+    "cardLine": {"type": "label", "text": "{param:text}", "colour": "{param:colour}", "font": {"size": "small"}},
+    "limitRow": {
+      "type": "view",
+      "layout": "grid",
+      "cols": 2,
+      "rows": 1,
+      "spacing": 8,
+      "components": [
+        {
+          "id": "{param:label}",
+          "type": "label",
+          "text": "",
+          "colour": "labelColor",
+          "font": {"size": "small", "monospaced": "digits"}
+        },
+        {
+          "id": "{param:bar}",
+          "type": "progress",
+          "hidden": true,
+          "constraints": {"position": "centre", "stretch": "horizontal"}
+        }
+      ]
+    },
+    "filterButton": {
+      "type": "button",
+      "text": "{param:text}",
+      "bordered": false,
+      "font": {"weight": "semibold"},
+      "shortcut": "{param:key}",
+      "tooltip": "{param:tip}",
+      "events": [
+        {
+          "triggers": "actioned",
+          "action": [
+            {"variables": {"filter": "{param:tool}"}},
+            {"type": "script", "src": "scripts/run", "args": ["filter", "{param:tool}"]}
+          ]
+        }
+      ]
+    },
+    "actionButton": {
+      "type": "button",
+      "text": "{param:text}",
+      "shortcut": "{param:key}",
+      "tooltip": "{param:tip}",
+      "events": [
+        {
+          "triggers": "actioned",
+          "action": {
+            "type": "script",
+            "src": "scripts/run",
+            "args": ["action", "{param:action}", "{value:list.selected.key}"]
+          }
+        }
+      ]
+    }
+  },
+  "window": {
+    "id": "main",
+    "title": "AI Dashboard",
+    "padding": 12,
+    "size": {"width": 900, "height": 600},
+    "minsize": {"width": 720, "height": 460},
+    "frameautosave": true,
+    "root": {
+      "type": "view",
+      "layout": "border",
+      "spacing": 14,
+      "events": [
+        {"triggers": "preload", "action": {"type": "script", "src": "scripts/run", "args": ["init"], "async": true}}
+      ],
+      "shortcuts": [
+        {"shortcut": "↑", "action": {"type": "function", "src": "list", "args": "selectprevious"}},
+        {"shortcut": "↓", "action": {"type": "function", "src": "list", "args": "selectnext"}}
+      ],
+      "components": [
+        {
+          "constraints": {"region": "top", "insets": {"left": 20, "right": 20}},
+          "type": "view",
+          "layout": "inline",
+          "direction": "vertical",
+          "spacing": 10,
+          "components": [
+            {
+              "type": "view",
+              "layout": "grid",
+              "cols": 2,
+              "rows": 1,
+              "spacing": 10,
+              "components": [
+                {
+                  "type": "view",
+                  "layout": "inline",
+                  "direction": "vertical",
+                  "padding": 14,
+                  "spacing": 4,
+                  "cornerradius": 10,
+                  "background": {"light": "#0000000f", "dark": "#ffffff1f"},
+                  "tooltip": "Show only Claude Code sessions",
+                  "events": [
+                    {
+                      "triggers": "clicked",
+                      "action": [
+                        {"variables": {"filter": "claude"}},
+                        {"type": "script", "src": "scripts/run", "args": ["filter", "claude"]}
+                      ]
+                    }
+                  ],
+                  "components": [
+                    {
+                      "type": "template",
+                      "src": "cardHeader",
+                      "constraints": {"position": "left"},
+                      "params": {"text": "Claude Code", "colour": "systemOrangeColor", "tool": "claude"}
+                    },
+                    {
+                      "type": "template",
+                      "src": "cardLine",
+                      "id": "claudeUsage",
+                      "params": {"text": "Reading local logs…", "colour": "labelColor"}
+                    },
+                    {
+                      "type": "template",
+                      "src": "cardLine",
+                      "id": "claudeTrend",
+                      "params": {"text": "", "colour": "secondaryLabelColor"}
+                    },
+                    {
+                      "type": "template",
+                      "src": "limitRow",
+                      "params": {"label": "claudeLimit0Label", "bar": "claudeLimit0Bar"}
+                    },
+                    {
+                      "type": "template",
+                      "src": "limitRow",
+                      "params": {"label": "claudeLimit1Label", "bar": "claudeLimit1Bar"}
+                    },
+                    {
+                      "id": "claudeLimitNote",
+                      "type": "label",
+                      "text": "",
+                      "colour": "tertiaryLabelColor",
+                      "font": {"size": "small"},
+                      "events": [
+                        {
+                          "triggers": "clicked",
+                          "action": {"type": "script", "src": "scripts/run", "args": ["action", "limits-setup"]}
+                        }
+                      ]
+                    }
+                  ],
+                  "id": "claudeCard"
+                },
+                {
+                  "type": "view",
+                  "layout": "inline",
+                  "direction": "vertical",
+                  "padding": 14,
+                  "spacing": 4,
+                  "cornerradius": 10,
+                  "background": {"light": "#0000000f", "dark": "#ffffff1f"},
+                  "tooltip": "Show only Codex sessions",
+                  "events": [
+                    {
+                      "triggers": "clicked",
+                      "action": [
+                        {"variables": {"filter": "codex"}},
+                        {"type": "script", "src": "scripts/run", "args": ["filter", "codex"]}
+                      ]
+                    }
+                  ],
+                  "components": [
+                    {
+                      "type": "template",
+                      "src": "cardHeader",
+                      "constraints": {"position": "left"},
+                      "params": {"text": "Codex", "colour": "systemTealColor", "tool": "codex"}
+                    },
+                    {
+                      "type": "template",
+                      "src": "cardLine",
+                      "id": "codexUsage",
+                      "params": {"text": "Reading local logs…", "colour": "labelColor"}
+                    },
+                    {
+                      "type": "template",
+                      "src": "cardLine",
+                      "id": "codexTrend",
+                      "params": {"text": "", "colour": "secondaryLabelColor"}
+                    },
+                    {"type": "template", "src": "limitRow", "params": {"label": "limit0Label", "bar": "limit0Bar"}},
+                    {"type": "template", "src": "limitRow", "params": {"label": "limit1Label", "bar": "limit1Bar"}},
+                    {
+                      "type": "template",
+                      "src": "cardLine",
+                      "id": "limitNote",
+                      "params": {"text": "", "colour": "tertiaryLabelColor"}
+                    }
+                  ],
+                  "id": "codexCard"
+                }
+              ],
+              "id": "cards"
+            },
+            {
+              "type": "view",
+              "layout": "border",
+              "spacing": 10,
+              "components": [
+                {
+                  "constraints": {"region": "centre", "position": "centre", "stretch": "horizontal"},
+                  "id": "search",
+                  "type": "textfield",
+                  "focus": true,
+                  "placeholder": "Search titles, folders, branches, models…  (↩ resumes)",
+                  "events": [
+                    {"triggers": "changed", "action": {"type": "function", "src": "list", "args": "filterdata"}},
+                    {
+                      "triggers": "actioned",
+                      "action": {
+                        "type": "script",
+                        "src": "scripts/run",
+                        "args": ["action", "primary", "{value:list.selected.key}"]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "constraints": {"region": "right"},
+                  "type": "view",
+                  "layout": "inline",
+                  "direction": "horizontal",
+                  "spacing": 10,
+                  "components": [
+                    {
+                      "type": "template",
+                      "src": "filterButton",
+                      "id": "filter_all",
+                      "params": {"text": "All", "key": "⌘1", "tip": "All sessions ⌘1", "tool": "all"}
+                    },
+                    {
+                      "type": "template",
+                      "src": "filterButton",
+                      "id": "filter_claude",
+                      "params": {"text": "Claude", "key": "⌘2", "tip": "Claude Code only ⌘2", "tool": "claude"}
+                    },
+                    {
+                      "type": "template",
+                      "src": "filterButton",
+                      "id": "filter_codex",
+                      "params": {"text": "Codex", "key": "⌘3", "tip": "Codex only ⌘3", "tool": "codex"}
+                    },
+                    {
+                      "id": "view_separator",
+                      "type": "label",
+                      "text": "|",
+                      "colour": "tertiaryLabelColor",
+                      "constraints": {"position": "centre"}
+                    },
+                    {
+                      "id": "view_archived",
+                      "type": "button",
+                      "text": "Archived",
+                      "bordered": false,
+                      "contenttintcolour": "secondaryLabelColor",
+                      "font": {"weight": "semibold"},
+                      "shortcut": "⌘4",
+                      "tooltip": "Show or hide archived sessions ⌘4",
+                      "events": [
+                        {
+                          "triggers": "actioned",
+                          "action": {"type": "script", "src": "scripts/run", "args": ["view", "toggle"]}
+                        }
+                      ]
+                    },
+                    {
+                      "type": "button",
+                      "bordered": false,
+                      "image": {"type": "symbol", "src": "arrow.clockwise"},
+                      "text": "",
+                      "shortcut": "⌘R",
+                      "tooltip": "Refresh ⌘R",
+                      "events": [
+                        {
+                          "triggers": "actioned",
+                          "action": {"type": "script", "src": "scripts/run", "args": ["load", "force"], "async": true}
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "constraints": {"region": "left", "size": {"width": 272}, "insets": {"left": 20}},
+          "id": "list",
+          "type": "dataview",
+          "spacing": 4,
+          "placeholder": "No sessions",
+          "autoadjustcontentinsets": false,
+          "behaviour": {"selection": {"allowempty": false}},
+          "events": [
+            {
+              "triggers": "changed",
+              "action": {
+                "type": "json",
+                "variables": {
+                  "selected": "{value:self.selected.key}",
+                  "sel_title": "{value:self.selected.title}",
+                  "sel_place": "{value:self.selected.place}",
+                  "sel_info": "{value:self.selected.info}",
+                  "sel_preview": "{value:self.selected.preview}"
+                },
+                "src": {
+                  "update": {
+                    "ids": {
+                      "detailTitle": {"text": "{var:sel_title}"},
+                      "detailPlace": {"text": "{var:sel_place}"},
+                      "detailInfo": {"text": "{var:sel_info}"},
+                      "detailPreview": {"text": "{var:sel_preview}"}
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "cell": {
+            "height": 54,
+            "init": {
+              "row.background": null,
+              "rowTitle.colour": "labelColor",
+              "rowTool.colour": "secondaryLabelColor",
+              "rowMeta.colour": "secondaryLabelColor"
+            },
+            "selected": {
+              "row.background": "alfredSelectedResultBackgroundColor",
+              "rowTitle.colour": "alfredSelectedResultTextColor",
+              "rowTool.colour": "alfredSelectedResultTextColor",
+              "rowMeta.colour": "alfredSelectedResultTextColor"
+            },
+            "root": {
+              "type": "view",
+              "layout": "border",
+              "components": [
+                {
+                  "id": "row",
+                  "type": "view",
+                  "layout": "inline",
+                  "direction": "vertical",
+                  "padding": 8,
+                  "spacing": 3,
+                  "cornerradius": 6,
+                  "components": [
+                    {"id": "rowTitle", "type": "label"},
+                    {
+                      "type": "view",
+                      "layout": "border",
+                      "spacing": 6,
+                      "components": [
+                        {
+                          "constraints": {"region": "left", "size": {"width": 78}},
+                          "id": "rowTool",
+                          "type": "label",
+                          "font": {"size": "small", "weight": "semibold"}
+                        },
+                        {
+                          "constraints": {"region": "centre"},
+                          "id": "rowMeta",
+                          "type": "label",
+                          "font": {"size": "small"}
+                        }
+                      ]
+                    }
+                  ],
+                  "constraints": {"region": "centre", "insets": {"right": 16}},
+                  "events": [
+                    {
+                      "triggers": "doubleclicked",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "primary", "{data:key}"]}
+                    }
+                  ],
+                  "menu": [
+                    {
+                      "text": "Resume",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "resume", "{data:key}"]}
+                    },
+                    {
+                      "text": "Open Project Folder",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "folder", "{data:key}"]}
+                    },
+                    {"type": "separator"},
+                    {
+                      "text": "Copy Resume Command",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "copycmd", "{data:key}"]}
+                    },
+                    {
+                      "text": "Copy Session ID",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "copyid", "{data:key}"]}
+                    },
+                    {
+                      "text": "Reveal Session Log",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "reveal", "{data:key}"]}
+                    },
+                    {"type": "separator"},
+                    {
+                      "text": "Archive…",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "delete", "{data:key}"]}
+                    },
+                    {
+                      "text": "Restore from Archive",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "restore", "{data:key}"]}
+                    },
+                    {
+                      "text": "Delete Permanently…",
+                      "action": {"type": "script", "src": "scripts/run", "args": ["action", "purge", "{data:key}"]}
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "data": {
+            "type": "basic",
+            "src": [],
+            "filter": {
+              "type": "basic",
+              "args": "search",
+              "match": "{value:search.text}",
+              "matchmode": "wordmatchanyorder"
+            }
+          }
+        },
+        {
+          "constraints": {"region": "centre", "insets": {"right": 20}},
+          "type": "view",
+          "layout": "border",
+          "spacing": 14,
+          "components": [
+            {"type": "view", "constraints": {"region": "left", "size": {"width": 1}}, "background": "separatorColor"},
+            {
+              "constraints": {"region": "centre"},
+              "type": "view",
+              "layout": "border",
+              "spacing": 8,
+              "components": [
+                {
+                  "constraints": {"region": "top"},
+                  "type": "view",
+                  "layout": "inline",
+                  "direction": "vertical",
+                  "spacing": 4,
+                  "components": [
+                    {
+                      "id": "detailTitle",
+                      "type": "label",
+                      "text": "Loading…",
+                      "font": {"size": "medium", "weight": "semibold"},
+                      "selectable": true
+                    },
+                    {
+                      "id": "detailPlace",
+                      "type": "label",
+                      "text": "",
+                      "colour": "secondaryLabelColor",
+                      "font": {"size": "small"},
+                      "linebreak": "truncatemiddle",
+                      "selectable": true
+                    },
+                    {
+                      "type": "template",
+                      "src": "cardLine",
+                      "id": "detailInfo",
+                      "params": {"text": "", "colour": "secondaryLabelColor"}
+                    },
+                    {
+                      "type": "view",
+                      "layout": "border",
+                      "components": [
+                        {
+                          "type": "view",
+                          "layout": "inline",
+                          "direction": "horizontal",
+                          "spacing": 6,
+                          "components": [
+                            {
+                              "type": "template",
+                              "src": "actionButton",
+                              "id": "btnPrimary",
+                              "params": {
+                                "text": "Resume",
+                                "key": "⌘↩",
+                                "tip": "Resume in your terminal, or restore ⌘↩",
+                                "action": "primary"
+                              }
+                            },
+                            {
+                              "type": "template",
+                              "src": "actionButton",
+                              "params": {
+                                "text": "Folder",
+                                "key": "⌘O",
+                                "tip": "Open project folder ⌘O",
+                                "action": "folder"
+                              }
+                            },
+                            {
+                              "type": "template",
+                              "src": "actionButton",
+                              "id": "btnCopy",
+                              "params": {
+                                "text": "Copy",
+                                "key": "⇧⌘C",
+                                "tip": "Copy resume command ⇧⌘C",
+                                "action": "copycmd"
+                              }
+                            },
+                            {
+                              "type": "template",
+                              "src": "actionButton",
+                              "params": {
+                                "text": "Log",
+                                "key": "⇧⌘R",
+                                "tip": "Reveal session log ⇧⌘R",
+                                "action": "reveal"
+                              }
+                            },
+                            {
+                              "type": "button",
+                              "text": "Archive",
+                              "tooltip": "Archive, or delete when already archived. Asks first.",
+                              "events": [
+                                {
+                                  "triggers": "actioned",
+                                  "action": {
+                                    "type": "script",
+                                    "src": "scripts/run",
+                                    "args": ["action", "remove", "{value:list.selected.key}"]
+                                  }
+                                }
+                              ],
+                              "id": "btnRemove"
+                            }
+                          ],
+                          "constraints": {"region": "left"}
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "constraints": {"region": "centre"},
+                  "id": "detailPreview",
+                  "type": "markdownarea",
+                  "text": "",
+                  "autoadjustcontentinsets": false,
+                  "behaviour": {"mode": "replace", "scroll": "start"}
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "template",
+          "src": "cardLine",
+          "id": "status",
+          "constraints": {"region": "bottom", "insets": {"left": 20, "right": 20}},
+          "params": {"text": "Loading…", "colour": "secondaryLabelColor"}
+        }
+      ]
+    },
+    "appearance": "{var:window_appearance}"
+  }
+}

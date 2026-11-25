@@ -1,0 +1,20 @@
+#!/bin/sh
+# Runs dashboard.py with whichever Python 3 this Mac has, and says so plainly when there is none.
+for python in "$(command -v python3)" /opt/homebrew/bin/python3 /usr/local/bin/python3; do
+  [ -x "$python" ] || continue
+  # Until Apple's Command Line Tools are installed, /usr/bin/python3 is only a placeholder.
+  [ "$python" = /usr/bin/python3 ] && ! /usr/bin/xcode-select -p >/dev/null 2>&1 && continue
+  exec "$python" -B "${0%/*}/dashboard.py" "$@"  # -B: write nothing into the workflow folder
+done
+
+if [ "$1" = appearance ]; then
+  printf '%s' "$2" # pass the keyword argument on, so the window still opens
+else
+  cat <<'JSON'
+{"update": {"ids": {
+  "status": {"text": "Python 3 is needed", "colour": "systemRedColor"},
+  "detailTitle": {"text": "Python 3 is needed"},
+  "detailPreview": {"text": "The dashboard could not find Python 3.\n\nOpen Terminal, run this, then open the dashboard again:\n\n```\nxcode-select --install\n```"}
+}}}
+JSON
+fi

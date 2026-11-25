@@ -1,0 +1,750 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.github.ar-rhc.ai-dashboard</string>
+	<key>connections</key>
+	<dict>
+		<key>1BBF4005-F0FB-4BB2-9D21-98427E99D868</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B70F80E0-5015-4F3A-8CAA-3ACFFA029448</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>2CB6C414-D0F3-432C-9E1C-3CC6FDD385C1</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>98D48AB1-8437-489D-B431-D30E8B8B6AC8</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>3590079E-C704-4EE5-9A8F-3872B1E587A4</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>98D48AB1-8437-489D-B431-D30E8B8B6AC8</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>921C37FE-3E4D-47BF-B98E-19FF122E074D</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>98D48AB1-8437-489D-B431-D30E8B8B6AC8</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<true/>
+			</dict>
+		</array>
+		<key>98D48AB1-8437-489D-B431-D30E8B8B6AC8</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>1BBF4005-F0FB-4BB2-9D21-98427E99D868</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>C4D8DF30-241B-42E7-9DF3-FDB257C1AB37</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>1F72E332-97CC-4F8A-B552-B0456BC0B0A2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>ar-rhc</string>
+	<key>description</key>
+	<string>Claude Code and Codex sessions, usage and limits</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>AI Dashboard</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>keyword</key>
+				<string>{var:keyword}</string>
+				<key>skipuniversalaction</key>
+				<true/>
+				<key>subtext</key>
+				<string>Claude Code and Codex sessions and usage (add “demo” for sample data)</string>
+				<key>text</key>
+				<string>AI Dashboard</string>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>921C37FE-3E4D-47BF-B98E-19FF122E074D</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<false/>
+				<key>triggerid</key>
+				<string>launch</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.external</string>
+			<key>uid</key>
+			<string>2CB6C414-D0F3-432C-9E1C-3CC6FDD385C1</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>launchmode</key>
+				<integer>0</integer>
+				<key>path</key>
+				<string>ai-dashboard.alfredui</string>
+				<key>stackview</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.userinterface.alfredui</string>
+			<key>uid</key>
+			<string>1F72E332-97CC-4F8A-B552-B0456BC0B0A2</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>action</key>
+				<integer>0</integer>
+				<key>argument</key>
+				<integer>0</integer>
+				<key>focusedappvariable</key>
+				<false/>
+				<key>focusedappvariablename</key>
+				<string></string>
+				<key>leftcursor</key>
+				<false/>
+				<key>modsmode</key>
+				<integer>0</integer>
+				<key>relatedAppsMode</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.trigger.hotkey</string>
+			<key>uid</key>
+			<string>3590079E-C704-4EE5-9A8F-3872B1E587A4</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>conditions</key>
+				<array>
+					<dict>
+						<key>inputstring</key>
+						<string>{var:external_window}</string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>5</integer>
+						<key>matchstring</key>
+						<string></string>
+						<key>outputlabel</key>
+						<string>Separate window</string>
+						<key>uid</key>
+						<string>C4D8DF30-241B-42E7-9DF3-FDB257C1AB37</string>
+					</dict>
+				</array>
+				<key>elselabel</key>
+				<string>Inside Alfred</string>
+				<key>hideelse</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.conditional</string>
+			<key>uid</key>
+			<string>98D48AB1-8437-489D-B431-D30E8B8B6AC8</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>launchmode</key>
+				<integer>1</integer>
+				<key>path</key>
+				<string>ai-dashboard.alfredui</string>
+				<key>stackview</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.userinterface.alfredui</string>
+			<key>uid</key>
+			<string>B70F80E0-5015-4F3A-8CAA-3ACFFA029448</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>script</key>
+				<string>./ai-dashboard.alfredui/scripts/run appearance "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>1BBF4005-F0FB-4BB2-9D21-98427E99D868</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>## AI Dashboard
+
+Browse local **Claude Code** and **Codex** sessions, usage and limits. Type `aidash` (or the keyword you set below), or `aidash demo` to see sample data (`aidash demo archived` opens the sample archive). Sample data is invented and safe to screenshot.
+
+### Requirements
+
+- Alfred 6 with the Powerpack
+- `python3` for the dashboard (install Apple's Command Line Tools with `xcode-select --install` if you do not have it)
+- Claude Code and/or Codex, used at least once. Turn off the one you do not use.
+- Optional: `tmux`; `zstd` to preview older Codex sessions that Codex compressed
+
+### Using it
+
+- Select a session to preview its latest messages. Press Return or double-click to resume it in your terminal, in tmux if you use it.
+- A separate window matches your Alfred theme's light or dark look.
+- Right-click for more actions. ⌘1 / ⌘2 / ⌘3 filter, ⌘4 shows archived sessions, ⌘R refreshes.
+- **Archive** asks first. The archived view offers **Restore** and **Delete…**. Claude Code sessions are archived to `ai-dashboard-archive` inside the Claude folder; Codex uses `codex archive`.
+- **Delete Permanently** cannot be undone. Open sessions cannot be archived or deleted.
+
+### Claude Code limits
+
+Claude Code gives its limits to the status line. In Claude Code, use `/statusline` to set it up:
+
+`/statusline keep my status line as it is, and when rate_limits is present save that object to ~/.claude/ai-dashboard-rate-limits.json`
+
+Until then, the dashboard shows the figures Claude Code last cached in `~/.claude.json`, which can be hours old. The newer reading is used, with its time.
+
+### Privacy
+
+Everything is read from local folders (`~/.claude` and `~/.codex` unless changed). Nothing is sent anywhere. From `~/.claude.json` only the cached usage figures are used. Titles and short message excerpts are cached in the workflow's cache folder. Turn previews off to keep message text out of it; generated titles are still cached. Token figures are uncached input plus output counted from local logs, not billing figures.
+
+### Configuration
+
+Choose the tools shown, their data folders, terminal and tmux behaviour, list and preview size, limit wording, refresh rate, resume options, and whether permanent deletion is allowed.
+</string>
+	<key>uidata</key>
+	<dict>
+		<key>1BBF4005-F0FB-4BB2-9D21-98427E99D868</key>
+		<dict>
+			<key>xpos</key>
+			<integer>480</integer>
+			<key>ypos</key>
+			<integer>50</integer>
+		</dict>
+		<key>1F72E332-97CC-4F8A-B552-B0456BC0B0A2</key>
+		<dict>
+			<key>xpos</key>
+			<integer>500</integer>
+			<key>ypos</key>
+			<integer>200</integer>
+		</dict>
+		<key>2CB6C414-D0F3-432C-9E1C-3CC6FDD385C1</key>
+		<dict>
+			<key>xpos</key>
+			<integer>50</integer>
+			<key>ypos</key>
+			<integer>330</integer>
+		</dict>
+		<key>3590079E-C704-4EE5-9A8F-3872B1E587A4</key>
+		<dict>
+			<key>xpos</key>
+			<integer>50</integer>
+			<key>ypos</key>
+			<integer>190</integer>
+		</dict>
+		<key>921C37FE-3E4D-47BF-B98E-19FF122E074D</key>
+		<dict>
+			<key>xpos</key>
+			<integer>50</integer>
+			<key>ypos</key>
+			<integer>50</integer>
+		</dict>
+		<key>98D48AB1-8437-489D-B431-D30E8B8B6AC8</key>
+		<dict>
+			<key>xpos</key>
+			<integer>300</integer>
+			<key>ypos</key>
+			<integer>80</integer>
+		</dict>
+		<key>B70F80E0-5015-4F3A-8CAA-3ACFFA029448</key>
+		<dict>
+			<key>xpos</key>
+			<integer>660</integer>
+			<key>ypos</key>
+			<integer>50</integer>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>aidash</string>
+				<key>placeholder</key>
+				<string>aidash</string>
+				<key>required</key>
+				<true/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>Keyword</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>keyword</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<false/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>Open in a separate, resizable window</string>
+			</dict>
+			<key>description</key>
+			<string>Off keeps the dashboard inside Alfred.</string>
+			<key>label</key>
+			<string>Window</string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>external_window</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>pairs</key>
+				<array>
+					<array>
+						<string>System default</string>
+						<string></string>
+					</array>
+					<array>
+						<string>Apple Terminal</string>
+						<string>Terminal</string>
+					</array>
+					<array>
+						<string>iTerm</string>
+						<string>iTerm</string>
+					</array>
+					<array>
+						<string>Ghostty</string>
+						<string>Ghostty</string>
+					</array>
+					<array>
+						<string>Custom command</string>
+						<string>custom</string>
+					</array>
+				</array>
+			</dict>
+			<key>description</key>
+			<string>The app used to resume a session. iTerm asks you to confirm each launch.</string>
+			<key>label</key>
+			<string>Resume terminal</string>
+			<key>type</key>
+			<string>popupbutton</string>
+			<key>variable</key>
+			<string>terminal_app</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>open -na kitty --args</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Used when Resume terminal is Custom command. The script to run is added at the end. Example: open -na kitty --args</string>
+			<key>label</key>
+			<string>Custom command</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>terminal_command</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>auto</string>
+				<key>pairs</key>
+				<array>
+					<array>
+						<string>Automatic</string>
+						<string>auto</string>
+					</array>
+					<array>
+						<string>Always</string>
+						<string>always</string>
+					</array>
+					<array>
+						<string>Never</string>
+						<string>never</string>
+					</array>
+				</array>
+			</dict>
+			<key>description</key>
+			<string>Automatic adds a window to tmux if it is open in that terminal, otherwise opens a plain window. Always uses tmux, starting it if needed.</string>
+			<key>label</key>
+			<string>tmux</string>
+			<key>type</key>
+			<string>popupbutton</string>
+			<key>variable</key>
+			<string>tmux_mode</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<true/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>Claude Code</string>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>Tools</string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>show_claude</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<true/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>Codex</string>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string></string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>show_codex</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>~/.claude</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Leave blank for the standard folder. Another folder is a separate profile, so resuming from it may ask you to sign in.</string>
+			<key>label</key>
+			<string>Claude Code folder</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>claude_folder</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>~/.codex</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Leave blank for the standard folder. Another folder is a separate profile, so resuming from it may ask you to sign in.</string>
+			<key>label</key>
+			<string>Codex folder</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>codex_folder</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>60</string>
+				<key>pairs</key>
+				<array>
+					<array>
+						<string>25</string>
+						<string>25</string>
+					</array>
+					<array>
+						<string>60</string>
+						<string>60</string>
+					</array>
+					<array>
+						<string>100</string>
+						<string>100</string>
+					</array>
+					<array>
+						<string>200</string>
+						<string>200</string>
+					</array>
+				</array>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>Sessions per tool</string>
+			<key>type</key>
+			<string>popupbutton</string>
+			<key>variable</key>
+			<string>list_limit</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>6</string>
+				<key>pairs</key>
+				<array>
+					<array>
+						<string>Off</string>
+						<string>0</string>
+					</array>
+					<array>
+						<string>Last 2 messages</string>
+						<string>2</string>
+					</array>
+					<array>
+						<string>Last 6 messages</string>
+						<string>6</string>
+					</array>
+					<array>
+						<string>Last 12 messages</string>
+						<string>12</string>
+					</array>
+				</array>
+			</dict>
+			<key>description</key>
+			<string>Off keeps message text out of the preview and the cache. Titles the tools generate are still shown.</string>
+			<key>label</key>
+			<string>Message preview</string>
+			<key>type</key>
+			<string>popupbutton</string>
+			<key>variable</key>
+			<string>preview_count</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>left</string>
+				<key>pairs</key>
+				<array>
+					<array>
+						<string>Percentage left</string>
+						<string>left</string>
+					</array>
+					<array>
+						<string>Percentage used</string>
+						<string>used</string>
+					</array>
+				</array>
+			</dict>
+			<key>description</key>
+			<string>Claude Code limits also need the status line script to save them.</string>
+			<key>label</key>
+			<string>Limits show</string>
+			<key>type</key>
+			<string>popupbutton</string>
+			<key>variable</key>
+			<string>limit_style</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>30</string>
+				<key>pairs</key>
+				<array>
+					<array>
+						<string>Off</string>
+						<string>0</string>
+					</array>
+					<array>
+						<string>Every 15 seconds</string>
+						<string>15</string>
+					</array>
+					<array>
+						<string>Every 30 seconds</string>
+						<string>30</string>
+					</array>
+					<array>
+						<string>Every minute</string>
+						<string>60</string>
+					</array>
+					<array>
+						<string>Every 5 minutes</string>
+						<string>300</string>
+					</array>
+				</array>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>Auto refresh</string>
+			<key>type</key>
+			<string>popupbutton</string>
+			<key>variable</key>
+			<string>refresh_seconds</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>--model opus</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Added when resuming, before --resume.</string>
+			<key>label</key>
+			<string>Claude Code options</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>claude_args</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>--yolo</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Added when resuming, after codex resume.</string>
+			<key>label</key>
+			<string>Codex options</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>codex_args</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<true/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>Allow “Delete Permanently”</string>
+			</dict>
+			<key>description</key>
+			<string>Delete always asks first. Permanent deletion cannot be undone.</string>
+			<key>label</key>
+			<string>Deleting</string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>allow_purge</string>
+		</dict>
+	</array>
+	<key>variablesdontexport</key>
+	<array/>
+	<key>version</key>
+	<string>1.0.0</string>
+	<key>webaddress</key>
+	<string>https://github.com/ar-rhc/alfred-ai-dashboard-workflow</string>
+</dict>
+</plist>
